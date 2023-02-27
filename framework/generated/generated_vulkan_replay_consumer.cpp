@@ -547,7 +547,20 @@ void VulkanReplayConsumer::Process_vkWaitForFences(
     auto in_device = GetObjectInfoTable().GetDeviceInfo(device);
     MapHandles<FenceInfo>(pFences, fenceCount, &VulkanObjectInfoTable::GetFenceInfo);
 
-    VkResult replay_result = OverrideWaitForFences(GetDeviceTable(in_device->handle)->WaitForFences, returnValue, in_device, fenceCount, pFences, waitAll, timeout);
+    auto x = GetDeviceTable(in_device->handle)->WaitForFences;
+    auto y = [x](
+      VkDevice                                    device,
+      uint32_t                                    fenceCount,
+      const VkFence*                              pFences,
+      VkBool32                                    waitAll,
+      uint64_t                                    timeout
+    ){
+        std::cerr << "VkWaitForFences(" << device << ", " << fenceCount << ", (";
+        for (int i = 0; i < fenceCount; i++) { std::cerr << pFences[i] << ", "; }
+        std::cerr << "), " << waitAll << ", " << timeout << ")" << std::endl;  
+        return x(device, fenceCount,pFences, waitAll, timeout );
+    };
+    VkResult replay_result = OverrideWaitForFences(y, returnValue, in_device, fenceCount, pFences, waitAll, timeout);
     CheckResult("vkWaitForFences", returnValue, replay_result);
 }
 

@@ -21,6 +21,7 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
+#include <iostream>
 #include "decode/vulkan_replay_consumer_base.h"
 #include "decode/custom_vulkan_struct_handle_mappers.h"
 #include "decode/descriptor_update_template_decoder.h"
@@ -2966,17 +2967,26 @@ VkResult VulkanReplayConsumerBase::OverrideWaitForFences(PFN_vkWaitForFences    
 
     if (original_result == VK_SUCCESS)
     {
+        std::cerr << "VkWaitForFences(" << device << ", " << modified_fence_count << ", (";
+        for (int i = 0; i < modified_fence_count; i++) { std::cerr << modified_fences[i] << ", "; }
+        std::cerr << "), " << waitAll << ", inf.)" << std::endl;
         // Ensure that wait for fences waits until the fences have been signaled (or error occurs) by changing the
         // timeout to UINT64_MAX.
         result = func(device, modified_fence_count, modified_fences, waitAll, std::numeric_limits<uint64_t>::max());
     }
     else if (original_result == VK_TIMEOUT)
     {
+        std::cerr << "VkWaitForFences(" << device << ", " << modified_fence_count << ", (";
+        for (int i = 0; i < modified_fence_count; i++) { std::cerr << modified_fences[i] << ", "; }
+        std::cerr << "), " << waitAll << ", zero)" << std::endl;
         // Try to get a timeout result with a 0 timeout.
         result = func(device, modified_fence_count, modified_fences, waitAll, 0);
     }
     else
     {
+        std::cerr << "VkWaitForFences(" << device << ", " << modified_fence_count << ", (";
+        for (int i = 0; i < modified_fence_count; i++) { std::cerr << modified_fences[i] << ", "; }
+        std::cerr << "), " << waitAll << ", " << timeout << ")" << std::endl;
         result = func(device, modified_fence_count, modified_fences, waitAll, timeout);
     }
 
